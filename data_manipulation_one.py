@@ -1,7 +1,4 @@
 from pathlib import Path
-# from pandas import DataFrame
-import pandas as pd
-# import seaborn as sns
 import polars as pl
 from polars import DataFrame
 
@@ -11,13 +8,9 @@ def get_csv_file_list(folder: str) -> list:
     file_list = list(generator)
     return file_list
 
-def load_csv_and_concatenate(files: list) -> DataFrame:
-    result = pl.concat([pl.read_csv(f) for f in files], how="vertical")
-    return result
-
 def load_csv_mutate_concatenate(files: list) -> DataFrame | None:
     result = None
-    counter = 1
+
     for f in files:
         long = pl.read_csv(f)
         stamped = transform_timestamp(long)
@@ -29,11 +22,7 @@ def load_csv_mutate_concatenate(files: list) -> DataFrame | None:
         else:
             result = pl.concat([result, wide], how="diagonal_relaxed")
 
-        print(f"Counter at: {counter}")
-        counter += 1
     return result
-
-
 
 def transform_timestamp(d: DataFrame) -> DataFrame:
     d = d.with_columns(pl.col('SHOUR').replace(24, 0))
@@ -50,20 +39,21 @@ def transform_timestamp(d: DataFrame) -> DataFrame:
     return d
 
 def remove_duplicates(d: DataFrame) -> DataFrame:
-    # duplicate = d.duplicated(['SITECODE','AWSNO','TIMESTAMP','FIELDNAME'])
-    # d = d[~duplicate]
-    # return d
-    duplicate = d.select(pl.col('SITECODE'), pl.col("AWSNO"), pl.col("TIMESTAMP"), pl.col("FIELDNAME")).is_duplicated()
+    duplicate = d.select(
+        pl.col('SITECODE'), 
+        pl.col("AWSNO"), 
+        pl.col("TIMESTAMP"), 
+        pl.col("FIELDNAME")).is_duplicated()
     d = d.filter(~duplicate)
     return d
 
-def write_full_csv(folder: str, file: str, d: DataFrame):
+def write_wide_csv(folder: str, file: str, d: DataFrame):
     p = Path(folder + file)
     d.write_csv(p)
 
-def long_to_wide(long_format: DataFrame) -> DataFrame:
-    wide_form = long_format.pivot('FIELDNAME', index=['SITECODE', 'AWSNO','TIMESTAMP'], values='VALUE')
-    return wide_form
+def long_to_wide(d: DataFrame) -> DataFrame:
+    d = d.pivot('FIELDNAME', index=['SITECODE', 'AWSNO','TIMESTAMP'], values='VALUE')
+    return d
 
 def read_wide_format(folder: str, file: str) -> DataFrame:
     d = pl.read_csv(folder + file, try_parse_dates=True)
@@ -72,18 +62,11 @@ def read_wide_format(folder: str, file: str) -> DataFrame:
 def wrangle_files(folder: str):
     file_location_list = get_csv_file_list(folder)
     d = load_csv_mutate_concatenate(file_location_list)
+    if d is None:
+        raise IOError("No files loaded")
+    else: 
+        write_wide_csv(folder, 'wide_file.csv', d)
 
-    # d = load_csv_and_concatenate(file_location_list)
-    # print('loaded')
-    # d = transform_timestamp(d)
-    # print('timestamp')
-    # d = remove_duplicates(d)
-    # print('duplicates')
-    # write_full_csv(folder, 'long_file.csv', d)
-    # print('written long form')
-    # d = long_to_wide(d)
-    # write_full_csv(folder, 'wide_file.csv', d)
-    # print('written wide form')
 
 def random_attempts():
     # all = slice(None)
