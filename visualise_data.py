@@ -13,7 +13,7 @@ def direct_matplot_lib(d: DataFrame):
     ax.scatter(
         x=d_filtered["TIMESTAMP"],
         y=d_filtered["DRYTMP"],
-        c=d_filtered["AWSNO"]
+        s=1
     )
 
     ax.set_title('Dry Temperature at Alice Holt')
@@ -29,7 +29,7 @@ def direct_seaborn_lib(d: DataFrame):
         d_filtered,
         x="TIMESTAMP",
         y="DRYTMP",
-        hue="AWSNO",
+        s=1,
         ax=ax,
     )
     ax.set_title('Dry Temperature at Alice Holt')
@@ -93,6 +93,8 @@ def summarized_multiple_sites(d: DataFrame):
     g.set_xlabels('Year')
     g.set_ylabels('Temperature / Celcius')
     g.set_titles('Dry Temp at site {col_name}')
+    g.set(xticks=range(6))
+    g.set_xticklabels(['1996', '2000', '2005', '2008', '2012', '2016'])
 
 
 def one_year_one_site(d: DataFrame):
@@ -100,21 +102,20 @@ def one_year_one_site(d: DataFrame):
     one_year = d.with_columns(
         pl.col('TIMESTAMP').dt.year().alias('YEAR'),
         pl.col('TIMESTAMP').dt.month().alias('MONTH')
-    ).filter((pl.col('YEAR') == 2015) & (pl.col('SITECODE') == 'T09'))
+    ).filter((pl.col('YEAR') == 2000) & (pl.col('SITECODE') == 'T09'))
 
     fig, ax = plt.subplots()
     sns.kdeplot(
         data=one_year, x="DRYTMP", hue="MONTH", palette="crest", ax=ax
     )
 
-    ax.set_title('Dry Temperature at Alice Holt in 2015')
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Temperature / Celcius')
+    ax.set_title('Dry Temperature at Alice Holt in 2000')
+    ax.set_xlabel('Temperature / Celcius')
 
 
 def ridge(d: DataFrame):
 
-    # sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
+    sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
 
     # Create the data
     ts_ridge = d.with_columns(
@@ -142,13 +143,76 @@ def ridge(d: DataFrame):
     # passing color=None to refline() uses the hue mapping
     g.refline(y=0, linewidth=2, linestyle="-", color=None, clip_on=False)
 
-
     # Define and use a simple function to label the plot in axes coordinates
     def label(x, color, label):
         ax = plt.gca()
         ax.text(0, .2, label, fontweight="bold", color=color,
                 ha="left", va="center", transform=ax.transAxes)
 
+    g.map(label, "x")
+
+    # Set the subplots to overlap
+    g.figure.subplots_adjust(hspace=-.25)
+
+    # Remove axes details that don't play well with overlap
+    g.set_titles("")
+    g.set(yticks=[], ylabel="")
+    g.despine(bottom=True, left=True)
+    g.fig.suptitle('Dry Temperatures at Alice Holt in 2000 by Month')
+    g.set_axis_labels('Temperature / Celcius')
+
+
+
+def ridge_named(d: DataFrame):
+
+    sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
+
+    # Create the data
+    ts_ridge = d.with_columns(
+        pl.col('TIMESTAMP').dt.year().alias('YEAR'),
+        pl.col('TIMESTAMP').dt.month().alias('MONTH')
+    ).filter(
+            (pl.col('SITECODE') == 'T09') &
+            (pl.col('YEAR') == 2000)
+    ).select(['MONTH', 'DRYTMP'])
+
+    months = {1: 'January',
+              2: 'February',
+              3: 'March',
+              4: 'April',
+              5: 'May',
+              6: 'June',
+              7: 'July',
+              8: 'August',
+              9: 'September',
+              10: 'October',
+              11: 'November',
+              12: 'December'}
+
+              
+
+    x = ts_ridge.select(pl.col('DRYTMP')).to_series().to_list()
+    g = ts_ridge.select(pl.col('MONTH')).to_series().to_list()
+    df = pd.DataFrame(dict(x=x, g=g))
+    
+    # Initialize the FacetGrid object
+    pal = sns.cubehelix_palette(10, rot=-.25, light=.7)
+    g = sns.FacetGrid(df, row="g", hue="g", aspect=15, height=.5, palette=pal)
+
+    # Draw the densities in a few steps
+    g.map(sns.kdeplot, "x",
+        bw_adjust=.5, clip_on=False,
+        fill=True, alpha=1, linewidth=1.5)
+    g.map(sns.kdeplot, "x", clip_on=False, color="w", lw=2, bw_adjust=.5)
+
+    # passing color=None to refline() uses the hue mapping
+    g.refline(y=0, linewidth=2, linestyle="-", color=None, clip_on=False)
+
+    # Define and use a simple function to label the plot in axes coordinates
+    def label(x, color, label):
+        ax = plt.gca()
+        ax.text(0, .2, label, fontweight="bold", color=color,
+                ha="left", va="center", transform=ax.transAxes)
 
     g.map(label, "x")
 
