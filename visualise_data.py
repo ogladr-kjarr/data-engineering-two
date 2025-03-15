@@ -126,7 +126,6 @@ def ridge(d: DataFrame):
             (pl.col('YEAR') == 2000)
     ).select(['MONTH', 'DRYTMP'])
 
-    ts_ridge.with_columns(pl.when(pl.col('MONTH') == 1).then(pl.lit('January')).alias('TEXTMONTH'))
     ts_ridge = ts_ridge.with_columns(
         pl.when(pl.col('MONTH') == 1).then(pl.lit('January'))
             .when(pl.col('MONTH') == 2).then(pl.lit('February'))
