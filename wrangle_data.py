@@ -78,9 +78,5 @@ def wrangle_to_wide_format(folder: str):
         write_wide_csv(folder, 'wide_file.csv', d)
 
 
-def wrangle_to_postgres(folder: str):
-    pass
-
-
 if __name__ == '__main__':
     wrangle_to_wide_format('/home/ogladr-kjarr/data/ceh_ecn/')
