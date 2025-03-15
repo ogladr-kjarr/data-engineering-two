@@ -126,75 +126,26 @@ def ridge(d: DataFrame):
             (pl.col('YEAR') == 2000)
     ).select(['MONTH', 'DRYTMP'])
 
-    x = ts_ridge.select(pl.col('DRYTMP')).to_series().to_list()
-    g = ts_ridge.select(pl.col('MONTH')).to_series().to_list()
-    df = pd.DataFrame(dict(x=x, g=g))
-    
-    # Initialize the FacetGrid object
-    pal = sns.cubehelix_palette(10, rot=-.25, light=.7)
-    g = sns.FacetGrid(df, row="g", hue="g", aspect=15, height=.5, palette=pal)
-
-    # Draw the densities in a few steps
-    g.map(sns.kdeplot, "x",
-        bw_adjust=.5, clip_on=False,
-        fill=True, alpha=1, linewidth=1.5)
-    g.map(sns.kdeplot, "x", clip_on=False, color="w", lw=2, bw_adjust=.5)
-
-    # passing color=None to refline() uses the hue mapping
-    g.refline(y=0, linewidth=2, linestyle="-", color=None, clip_on=False)
-
-    # Define and use a simple function to label the plot in axes coordinates
-    def label(x, color, label):
-        ax = plt.gca()
-        ax.text(0, .2, label, fontweight="bold", color=color,
-                ha="left", va="center", transform=ax.transAxes)
-
-    g.map(label, "x")
-
-    # Set the subplots to overlap
-    g.figure.subplots_adjust(hspace=-.25)
-
-    # Remove axes details that don't play well with overlap
-    g.set_titles("")
-    g.set(yticks=[], ylabel="")
-    g.despine(bottom=True, left=True)
-    g.fig.suptitle('Dry Temperatures at Alice Holt in 2000 by Month')
-    g.set_axis_labels('Temperature / Celcius')
-
-
-
-def ridge_named(d: DataFrame):
-
-    sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
-
-    # Create the data
-    ts_ridge = d.with_columns(
-        pl.col('TIMESTAMP').dt.year().alias('YEAR'),
-        pl.col('TIMESTAMP').dt.month().alias('MONTH')
-    ).filter(
-            (pl.col('SITECODE') == 'T09') &
-            (pl.col('YEAR') == 2000)
-    ).select(['MONTH', 'DRYTMP'])
-
-    months = {1: 'January',
-              2: 'February',
-              3: 'March',
-              4: 'April',
-              5: 'May',
-              6: 'June',
-              7: 'July',
-              8: 'August',
-              9: 'September',
-              10: 'October',
-              11: 'November',
-              12: 'December'}
-
-              
+    ts_ridge.with_columns(pl.when(pl.col('MONTH') == 1).then(pl.lit('January')).alias('TEXTMONTH'))
+    ts_ridge = ts_ridge.with_columns(
+        pl.when(pl.col('MONTH') == 1).then(pl.lit('January'))
+            .when(pl.col('MONTH') == 2).then(pl.lit('February'))
+            .when(pl.col('MONTH') == 3).then(pl.lit('March'))
+            .when(pl.col('MONTH') == 4).then(pl.lit('April'))
+            .when(pl.col('MONTH') == 5).then(pl.lit('May'))
+            .when(pl.col('MONTH') == 6).then(pl.lit('June'))
+            .when(pl.col('MONTH') == 7).then(pl.lit('July'))
+            .when(pl.col('MONTH') == 8).then(pl.lit('August'))
+            .when(pl.col('MONTH') == 9).then(pl.lit('September'))
+            .when(pl.col('MONTH') == 10).then(pl.lit('October'))
+            .when(pl.col('MONTH') == 11).then(pl.lit('November'))
+            .when(pl.col('MONTH') == 12).then(pl.lit('December')).alias('CHARMONTH')
+    )
 
     x = ts_ridge.select(pl.col('DRYTMP')).to_series().to_list()
-    g = ts_ridge.select(pl.col('MONTH')).to_series().to_list()
+    g = ts_ridge.select(pl.col('CHARMONTH')).to_series().to_list()
     df = pd.DataFrame(dict(x=x, g=g))
-    
+
     # Initialize the FacetGrid object
     pal = sns.cubehelix_palette(10, rot=-.25, light=.7)
     g = sns.FacetGrid(df, row="g", hue="g", aspect=15, height=.5, palette=pal)
