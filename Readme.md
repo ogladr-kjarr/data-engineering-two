@@ -96,7 +96,7 @@ Lastly the file is written to disk as a CSV file.
 
 # Plots
 
-The plots here are just the most basic to have a quick look at part of the data. I decided to use the dry temperature sensor to focus on, as it provides the most pleasing and intuitive data, that of a hourly temperature reading over a number of years. I decided to focus on one side, T09 - Alice Holt.
+The plots here are just the most basic to have a quick look at part of the data. I decided to use the dry temperature sensor to focus on, as it provides the most pleasing and intuitive data, that of a hourly temperature reading over a number of years. I decided to focus on one site, T09 - Alice Holt.
 
 First though, to see the above, I created a FacetGrid plot of all sites dry temperature values, as shown below. I was happy getting the plot to show the site code in each facets title, but I was unhappy at the way the xticks aren't shown properly. Using the documention, Stack Overflow, ChatGPT, and Claude Sonnet, I could not find a working solution. I even tried using a pandas DataFrame in case there was some difference between their date time representation interpretation by the graph, but that didn't work either.
 
@@ -118,15 +118,10 @@ The last two plots are density plots for Alice Holt, covering the year of 2000. 
 
 ![One Site One Year Density Plot](plots/one-site-monthly-seaborn.png)
 
-The ridge plot was very fragile, in the end I used the code from this [example]() and after having no success trying to tailor it to my data, I tailored my data to the existing structure and it worked. 
-
-TODO: Change the month integers to the month names.
+The ridge plot was very fragile, in the end I used the code from this [example](https://seaborn.pydata.org/examples/kde_ridgeplot.html) and after having no success trying to tailor it to my data, I tailored my data to the existing structure and it worked. 
 
 ![One Site One Year Ridge Plot](plots/one-site-monthly-ridge-seaborn.png)
-\]
 
 # Software installed
 
-todo: create a pip requirements file and create a venv
-
-pip install types-seaborn
+The libraries used are listed in the requirements.txt file.
