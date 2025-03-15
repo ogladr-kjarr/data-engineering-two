@@ -92,13 +92,24 @@ def long_to_wide(d: DataFrame) -> DataFrame:
     return d
 ```
 
-Lastly the file is written to disk as a CSV file.
+Lastly the file is written to disk as a CSV file from the orchestration function below.
+
+```python
+def wrangle_to_wide_format(folder: str):
+    file_location_list = get_csv_file_list(folder)
+    d = load_csv_mutate_concatenate(file_location_list)
+    if d is None:
+        raise IOError("No files loaded")
+    else:
+        write_wide_csv(folder, 'wide_file.csv', d)
+
+```
 
 # Plots
 
 The plots here are just the most basic to have a quick look at part of the data. I decided to use the dry temperature sensor to focus on, as it provides the most pleasing and intuitive data, that of a hourly temperature reading over a number of years. I decided to focus on one site, T09 - Alice Holt.
 
-First though, to see the above, I created a FacetGrid plot of all sites dry temperature values, as shown below. I was happy getting the plot to show the site code in each facets title, but I was unhappy at the way the xticks aren't shown properly. Using the documention, Stack Overflow, ChatGPT, and Claude Sonnet, I could not find a working solution. I even tried using a pandas DataFrame in case there was some difference between their date time representation interpretation by the graph, but that didn't work either.
+First though, to see the above, I created a FacetGrid plot of all sites dry temperature values summarized to the monthly mean value, as shown below. I was happy getting the plot to show the site code in each facets title, but I was unhappy at the way the xticks aren't shown properly. Using the documention, Stack Overflow, ChatGPT, and Claude Sonnet, I could not find a working solution. I even tried using a pandas DataFrame in case there was some difference between their date time representation interpretation by the graph, but that didn't work either.
 
 ![All Sites FacetGrid Plot](plots/facet-grid-seaborn.png)
 
